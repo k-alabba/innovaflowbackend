@@ -1,5 +1,5 @@
 # wrangler.toml
-name = 'emailquote'
+name = "emailquote"
 main = "src/index.ts"
 compatibility_date = "2025-02-01"
-RESEND_API_KEY=re_ixgbWuA7_K8YviAG81JMBFDLxp7Gjvv1v
+RESEND_API_KEY="re_ixgbWuA7_K8YviAG81JMBFDLxp7Gjvv1v"
