@@ -1,3 +1,4 @@
-name = "send-quote-worker"
+# wrangler.toml
+name = 'emailquote'
 main = "src/index.ts"
 compatibility_date = "2025-02-01"
