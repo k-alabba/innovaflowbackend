@@ -61,10 +61,11 @@ export default {
       projectType: form.get("projectType")?.toString() || "N/A",
       budget: form.get("budget")?.toString() || "N/A",
       message: form.get("message")?.toString(),
-      consent: form.get("consent"),
     };
 
-    if (!data.email || !data.message || !data.consent) {
+    const consent = form.get("consent") === "on";
+
+    if (!data.email || !data.message || !consent) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required fields" }),
         {
@@ -77,6 +78,7 @@ export default {
       );
     }
 
+
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -84,7 +86,7 @@ export default {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Website <noreply@innovaflow.ca>",
+        from: "InnovaFlow <info@innovaflow.ca>",
         to: ["kumai.eng@outlook.com"],
         reply_to: data.email,
         subject: `Quote request — ${data.projectType}`,
