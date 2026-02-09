@@ -1,20 +1,44 @@
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    // Only allow POST
+    const url = new URL(request.url);
+
+    // Route guard
+    if (url.pathname !== "/api/contact") {
+      return new Response("Not Found", { status: 404 });
+    }
+
     if (request.method !== "POST") {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    let body: any;
+    let form: FormData;
     try {
-      body = await request.json();
+      form = await request.formData();
     } catch {
-      return new Response("Invalid JSON", { status: 400 });
+      return new Response("Invalid form data", { status: 400 });
     }
 
-    const { name, email, message } = body;
+    // Honeypot (must stay empty)
+    const honeypot = (form.get("website") as string | null)?.trim();
+    if (honeypot) {
+      // Silently accept (anti-bot)
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
-    if (!email || !message) {
+    const data = {
+      name: form.get("name")?.toString() || "N/A",
+      company: form.get("company")?.toString() || "N/A",
+      email: form.get("email")?.toString(),
+      phone: form.get("phone")?.toString() || "N/A",
+      projectType: form.get("projectType")?.toString() || "N/A",
+      budget: form.get("budget")?.toString() || "N/A",
+      message: form.get("message")?.toString(),
+      consent: form.get("consent"),
+    };
+
+    if (!data.email || !data.message || !data.consent) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required fields" }),
         { status: 400 }
@@ -24,20 +48,26 @@ export default {
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${env.RESEND_API_KEY}`,
-        "Content-Type": "application/json"
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         from: "Website <noreply@yourdomain.com>",
-        to: ["you@yourdomain.com"],
-        subject: `Quote request from ${name || email}`,
+        to: ["kumai.eng@outlook.com"],
+        reply_to: data.email,
+        subject: `Quote request — ${data.projectType}`,
         html: `
-          <p><strong>Name:</strong> ${name || "N/A"}</p>
-          <p><strong>Email:</strong> ${email}</p>
+          <h3>New quote request</h3>
+          <p><strong>Name:</strong> ${data.name}</p>
+          <p><strong>Company:</strong> ${data.company}</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Phone:</strong> ${data.phone}</p>
+          <p><strong>Project type:</strong> ${data.projectType}</p>
+          <p><strong>Budget:</strong> ${data.budget}</p>
           <p><strong>Message:</strong></p>
-          <p>${message}</p>
-        `
-      })
+          <p>${data.message}</p>
+        `,
+      }),
     });
 
     if (!resendResponse.ok) {
@@ -48,16 +78,13 @@ export default {
       );
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        }
-      }
-    );
-  }
+    return new Response(JSON.stringify({ success: true }), {
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  },
 };
 
 interface Env {
