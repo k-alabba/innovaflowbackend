@@ -86,7 +86,7 @@ export default {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "InnovaFlow <onboarding@resend.dev>",
+        from: "InnovaFlow <noreply@innovaflow.ca>",
         to: ["kumai.eng@outlook.com"],
         reply_to: data.email,
         subject: `Quote request — ${data.projectType}`,
