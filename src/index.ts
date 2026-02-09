@@ -86,7 +86,7 @@ export default {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "InnovaFlow <info@innovaflow.ca>",
+        from: "InnovaFlow <onboarding@resend.dev>",
         to: ["kumai.eng@outlook.com"],
         reply_to: data.email,
         subject: `Quote request — ${data.projectType}`,
@@ -105,9 +105,21 @@ export default {
     });
 
     if (!resendResponse.ok) {
-      const err = await resendResponse.text();
+      const errorText = await resendResponse.text();
+
+      console.error("RESEND ERROR:", {
+        status: resendResponse.status,
+        body: errorText,
+      });
+
       return new Response(
-        JSON.stringify({ success: false, error: err }),
+        JSON.stringify({
+          success: false,
+          error: "Email provider error",
+          provider: "resend",
+          status: resendResponse.status,
+          details: errorText,
+        }),
         {
           status: 502,
           headers: {
@@ -117,7 +129,6 @@ export default {
         }
       );
     }
-
     return new Response(JSON.stringify({ success: true }), {
       headers: {
         ...corsHeaders,
