@@ -87,7 +87,7 @@ export default {
       },
       body: JSON.stringify({
         from: "InnovaFlow <noreply@innovaflow.ca>",
-        to: ["kumai.alabbas@innovaflow.com"],
+        to: ["kumai.alabbas@innovaflow.ca"],
         reply_to: data.email,
         subject: `Quote request — ${data.projectType}`,
         html: `
