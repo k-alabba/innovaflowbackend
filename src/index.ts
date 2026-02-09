@@ -1,29 +1,55 @@
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
+
+    // Handle preflight
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders,
+      });
+    }
+
     const url = new URL(request.url);
 
     // Route guard
     if (url.pathname !== "/api/contact") {
-      return new Response("Not Found", { status: 404 });
+      return new Response("Not Found", {
+        status: 404,
+        headers: corsHeaders,
+      });
     }
 
     if (request.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+      return new Response("Method Not Allowed", {
+        status: 405,
+        headers: corsHeaders,
+      });
     }
 
     let form: FormData;
     try {
       form = await request.formData();
     } catch {
-      return new Response("Invalid form data", { status: 400 });
+      return new Response("Invalid form data", {
+        status: 400,
+        headers: corsHeaders,
+      });
     }
 
     // Honeypot (must stay empty)
     const honeypot = (form.get("website") as string | null)?.trim();
     if (honeypot) {
-      // Silently accept (anti-bot)
+      // Silently accept bots
       return new Response(JSON.stringify({ success: true }), {
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
       });
     }
 
@@ -41,7 +67,13 @@ export default {
     if (!data.email || !data.message || !data.consent) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing required fields" }),
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
@@ -74,14 +106,20 @@ export default {
       const err = await resendResponse.text();
       return new Response(
         JSON.stringify({ success: false, error: err }),
-        { status: 502 }
+        {
+          status: 502,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: {
+        ...corsHeaders,
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
       },
     });
   },
